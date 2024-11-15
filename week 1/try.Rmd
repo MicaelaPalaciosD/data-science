@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 
-This is an R Markdown document of the original code shown in the lecture. I tried to do it with the help of perplexity to later practice changing things on this code and see how it affects the output. 
+This is an R Markdown document of the original code shown in the lecture. I tried to do it with the help of chatGPT to later practice changing things on this code and see how it affects the output. UPDATE: I could not practice directly so I just put what each function did using the help of chatgpt.
 
 First, loading the data and viewing it.
 ```{r dataset}
