@@ -1,0 +1,98 @@
+---
+title: "CEO_Diary_og"
+author: "Micaela Palacios based on Sacha Kapoor slides"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document of the original code shown in the lecture. I tried to do it with the help of perplexity to later practice changing things on this code and see how it affects the output. 
+
+First, loading the data and viewing it.
+```{r dataset}
+CEO_Diary <- read.csv ("D:/Documentos/Documents/Master/Data Science/data/survey_response_data.csv")
+View(CEO_Diary)
+```
+
+CEO_Diary is called a dataframe. To subset the data you can use
+```{r subset_data}
+CEO_Diary[1:15,c(1:5,37, 39, 40)]
+```
+
+To fin out the "class" of a variable you use apply.
+CHECK WHAT DOES THE 2 do. (2 means it is applied to columns, 1 would have meant rows)
+```{r}
+apply(CEO_Diary,2,class)
+```
+
+other functions include returning the number of rows available:
+```{r}
+nrow(CEO_Diary)
+```
+
+or summary statistics:
+in this case we are giving summary statistics of the columns 1-5
+```{r}
+summary(CEO_Diary[1:5])
+
+```
+
+or open a graphic (in this case it is a png file from a file path, you can decide the size)
+```{r}
+ png(file="figs/CEOTypes.png", width=800, height=300)
+```
+
+par(mar=c(9, 3, 1, 1)):
+
+par() is used to set graphical parameters.
+mar=c(9, 3, 1, 1) adjusts the margins of the plot. The mar argument specifies the size of the margins in the order: bottom, left, top, and right. Here, the bottom margin is set to 9 (to accommodate rotated labels), and the other margins are smaller.
+```{r}
+par(mar=c(9, 3 ,1,1))
+  
+```
+table(CEO_Diary$type): Creates a frequency table of the type variable in the CEO_Diary data frame.
+prop.table(): Converts the frequency table into proportions (so the bar heights represent proportions rather than raw counts).
+barplot(): Plots a bar chart of the proportions.
+las=2: Rotates the axis labels to be perpendicular to the axis, making them easier to read when there are many or long labels.
+```{r}
+barplot(prop.table(table(CEO_Diary$type)), las=2)
+
+```
+
+This closes the graphics device, saving the image file to the specified path.
+```{r}
+# dev.off()
+```
+
+
+Now what would have happened without the specifications:
+
+```{r}
+barplot(prop.table(table(CEO_Diary$type)));
+
+table(CEO_Diary$type);
+
+prop.table(table(CEO_Diary$type));
+```
+
+
+You can also fit statistical models, fit regression of Strategy (=1 if meeting about strategy) on
+
+```{r}
+fit <- glm(strategy ~ consultants + politicians, data=CEO_Diary); summary(fit)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
