@@ -178,6 +178,10 @@ where $\bar{X}$ is the sample mean for the full sample. We are effectively takin
 # Chapter 1 - Frequentist vs Bootstrap
 
 ```{r}
+# had trouble opening data so solved it using:
+getwd()
+#and then setting it with 
+setwd("D:/Documentos/Documents/GitHub/data-science/data")
   browser <- read.csv("../Data/web-browsers.csv")
   dim(browser)
   head(browser)
