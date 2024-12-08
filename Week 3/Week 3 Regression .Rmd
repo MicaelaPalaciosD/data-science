@@ -90,8 +90,8 @@ which is statistical basis for linear regression.
 To run regressions in R 
 ```{r}
 oj <- read.csv("../Data/oj.csv")
-head(oj, n=5)    
-tail(oj, n=5)    
+head(oj, n=10)    
+tail(oj, n=4)    
 glm(log(sales) ~ brand + log(price), data=oj)
 
 ```
@@ -99,7 +99,7 @@ glm(log(sales) ~ brand + log(price), data=oj)
 # Regression
 
 ```{r}
-glm(log(sales) ~ brand + log(price), data=oj)
+glm(log(sales) ~ brand + log(price), data=oj) #doing the generalized linear model regression. First the dep var and then indep var, data specifications
 ```
 where base group is the house brand oj (dominicks). 
 
@@ -108,8 +108,8 @@ where base group is the house brand oj (dominicks).
 
 Note that glm creates dummies for brand in background via: 
 ```{r}
-x <- model.matrix(~ brand + log(price), data=oj); head(x); tail(x)
-
+x <- model.matrix(~ brand + log(price), data=oj); head(x); tail(x,3)
+#model.matrix creates a design matrix with dummies, head and tail is used to print that matrix. If I change x then it prints something else. that is because x is the data, if I add a comma and a number then it prints that amount of rows 
 ```
 
 ---
