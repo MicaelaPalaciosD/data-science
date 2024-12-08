@@ -111,7 +111,7 @@ Note that glm creates dummies for brand in background via:
 x <- model.matrix(~ brand + log(price), data=oj); head(x); tail(x,3)
 #model.matrix creates a design matrix with dummies, head and tail is used to print that matrix. If I change x then it prints something else. that is because x is the data, if I add a comma and a number then it prints that amount of rows 
 ```
-
+########### hasta aqui hice
 ---
 # Regression
 
