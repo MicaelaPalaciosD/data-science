@@ -1,7 +1,7 @@
 ---
 title: "FEM11213 - Data Science and HR Analytics"
-subtitle: "03 - Regression"
-author: "Sacha Kapoor"
+subtitle: "03 - Regression - with changes"
+author: "Sacha Kapoor (changes by Micaela"
 date: "07 November 2023 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
@@ -127,17 +127,7 @@ oj$mybrand = relevel(oj$brand, "tropicana") #changes reference category to tropi
 x <- model.matrix(~ mybrand + log(price), data=oj); head(x)
 ```
 
----
 
-# Regression
-
-Can change the base group 
-```{r}
-oj$brand = as.factor(oj$brand)
-x <- model.matrix(~ brand + log(price), data=oj); head(x)
-oj$mybrand = relevel(oj$brand, "tropicana")
-x <- model.matrix(~ mybrand + log(price), data=oj); head(x)
-```
 
 ---
 
@@ -211,15 +201,15 @@ knitr::include_graphics("figs/Logistic.png")
 Can use logistic regression to build a filter for allocating spam to junk mail. Can train filter using logistic regression and previous emails.  
 
 ```{r}
-email <- read.csv("../Data/spam.csv")
-dim(email)
-colnames(email)    
+email <- read.csv("C:/Users/micap/Documents/GitHub/data-science/data/spam.csv")
+dim(email) #returns dimension of data set (obs and variables)
+colnames(email) # in this case is binary   
 ```
 
 ---
 
 ```{r}
-glm(spam ~ ., data=email, family='binomial')
+glm(spam ~ ., data=email, family='binomial') # this regresses in al covariates
 ```
 
 ```{r,echo=FALSE}
@@ -231,13 +221,15 @@ spammy <- glm(spam ~ ., data=email, family='binomial')
 # Logistic Regression Example
 
 ```{r}
-coef(spammy)["word_free"]; exp(coef(spammy)["word_free"])
+coef(spammy)["word_free"]; exp(coef(spammy)["word_free"]) #Extracts the coefficient for the variable word_free ;separates statements in same line so you dont need different lines of code. Then this calculated the exponential of word_free. 
 ```
 
 Spam odds increases by a factor of 5 if email contains the word "free". 
 
 ```{r}
-coef(spammy)["word_george"]; exp(coef(spammy)["word_george"]); 1/exp(coef(spammy)["word_george"])
+coef(spammy)["word_george"]
+exp(coef(spammy)["word_george"]) #exponential --> odds multiplier with one unit increase
+1/exp(coef(spammy)["word_george"]) # reciprocal of the odds multiplier. This is a one-unit decrease!!
 ```
 
 Spam odds decrease by a factor of 300 if email contains the word "george". The dataset is a set of emails to a person named "george". 
@@ -255,7 +247,7 @@ We can obtain predicted values
 for each observation (for each row in our data). To obtain predicted probabilities for observations 1 and 4000: 
 
 ```{r}
-predict(spammy, newdata = email[c(1,4000),], type="response")
+predict(spammy, newdata = email[c(1,4000),], type="response") #rows 1-4000 from email dataset. output is in probabilities, not log-odds. It will not be 1 and 0 so we take those as judgement call. 
 ```
 
 where $type="response"$ tells R to return the predicted probabilities rather than the predicted linear function $\widehat{\beta_0} + \widehat{\beta_1} x_1 + ... +  \widehat{\beta_p} x_p$. The first email is true spam. The predicted probability says it has an 88 percent chance of being spam. The second email is real. It has 15 percent chance of being spam. 
@@ -267,8 +259,8 @@ where $type="response"$ tells R to return the predicted probabilities rather tha
 At the bottom of the spam regression output you will see 
 
 ```{r}
-summary(spammy)$deviance
-summary(spammy)$null.deviance
+summary(spammy)$deviance #retrieves residual deviance of the model spammy --> how far model is from the data. 
+summary(spammy)$null.deviance # null deviance --> deviance from null model (only intercept), how well the simplest model fits. 
 ```
 
 What are these statistics? 
