@@ -35,7 +35,7 @@ theme_set(theme_gray(15))
 ```
 
 ```{r, references, echo=FALSE, cache=FALSE}
-install.packages("RefManageR")
+#install.packages("RefManageR")
 library(RefManageR)
 BibOptions(check.entries = FALSE, 
            bib.style = "numeric", 
@@ -89,12 +89,16 @@ which is statistical basis for linear regression.
 
 To run regressions in R 
 ```{r}
-oj <- read.csv("../Data/oj.csv")
+oj <- read.csv("C:/Users/micap/Documents/GitHub/data-science/data/oj.csv")
 head(oj, n=10)    
 tail(oj, n=4)    
 glm(log(sales) ~ brand + log(price), data=oj)
 
 ```
+```{r}
+glm(sales ~ brand + price, data=oj)
+```
+Not using  logs makes AIC larger... that is not good. 
 ---
 # Regression
 
@@ -110,16 +114,16 @@ Note that glm creates dummies for brand in background via:
 ```{r}
 x <- model.matrix(~ brand + log(price), data=oj); head(x); tail(x,3)
 #model.matrix creates a design matrix with dummies, head and tail is used to print that matrix. If I change x then it prints something else. that is because x is the data, if I add a comma and a number then it prints that amount of rows 
+#here the reference category was alphabetical
 ```
-########### hasta aqui hice
 ---
 # Regression
 
 Can change the base group 
 ```{r}
-oj$brand = as.factor(oj$brand)
+oj$brand = as.factor(oj$brand) #converts brand column to factor (non numerical)
 x <- model.matrix(~ brand + log(price), data=oj); head(x)
-oj$mybrand = relevel(oj$brand, "tropicana")
+oj$mybrand = relevel(oj$brand, "tropicana") #changes reference category to tropicana
 x <- model.matrix(~ mybrand + log(price), data=oj); head(x)
 ```
 
