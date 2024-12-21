@@ -203,7 +203,7 @@ setwd("D:/Documentos/Documents/GitHub/data-science/data")
 ```{r}
   B <- 1000
   mub <- c()
-  for (b in 1:1000){
+  for (b in 1:100){
     samp_b <- sample.int(nrow(browser), replace=TRUE)
     mub <- c(mub, mean(browser$spend[samp_b]))
   }
@@ -223,7 +223,7 @@ We can overlay theoretical sampling distribution of frequentist approach on boot
   for (b in 1:1000){
     samp_b <- sample.int(nrow(browser), replace=TRUE)
     mub <- c(mub, mean(browser$spend[samp_b]))
-  }
+  } #store means in mub
 ```
 
 
@@ -497,17 +497,18 @@ Example: Suppose $q=0.1$, $p_1 = 0.5$, and $p_2 = 0.01$.
 # BH Algorithm Example 1
 
 ```{r}
+# perfrom BH by steps
   browser <- read.csv("../Data/web-browsers.csv")
   spendy <- glm(log(spend) ~ . -id, data=browser)
   round(summary(spendy)$coef,2)
-  pval <- summary(spendy)$coef[-1, "Pr(>|t|)"]
+  pval <- summary(spendy)$coef[-1, "Pr(>|t|)"] 
   pvalrank <- rank(pval)
-  reject <- ifelse(pval< (0.1/9)*pvalrank, 2, 1) 
-  png(file="figs/BHAlgoExample.png",
-  width=600, height=350)
-  plot(pvalrank, pval, ylab="p-value", xlab="p-value rank", pch=16, col=reject)
-  lines(pvalrank, (0.1/9)*pvalrank)
-  dev.off()
+  reject <- ifelse(pval< (0.1/9)*pvalrank, 2, 1) #0.1 is significance level, normal to put it to 10%, 9 is the number of variables in the model. Rejected is the 2 not rejected is the 1.
+#  png(file="figs/BHAlgoExample.png",
+#  width=600, height=350)
+#  plot(pvalrank, pval, ylab="p-value", xlab="p-value rank", pch=16, col=reject)
+#  lines(pvalrank, (0.1/9)*pvalrank)
+ # dev.off()
 ```
 
 ---
@@ -529,6 +530,7 @@ SC <- read.csv("../Data/semiconductor.csv")
 dim(SC)
 full <- glm(FAIL ~ ., data=SC, family=binomial)
 pvals <- summary(full)$coef[-1,4] #-1 to drop the intercept
+#glm.fit error... maybe multicollinearity or outliers?
 ```
 
 ---
@@ -543,7 +545,8 @@ hist(pvals, xlab="p-value", main="", col="lightblue")#looks like we have some
 
 
 ```{r, echo=FALSE}
-fdr_cut <- function(pvals, q=0.1){
+#q smaller makes slope flatter ()
+fdr_cut <- function(pvals, q=0.05){ 
   pvals <- sort(pvals[!is.na(pvals)])
   N <- length(pvals)
   k <- rank(pvals, ties.method="min")
