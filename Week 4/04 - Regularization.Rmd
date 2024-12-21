@@ -1,7 +1,7 @@
 ---
 title: "FEM11213 - Data Science and HR Analytics"
 subtitle: "04 - Regularization"
-author: "Sacha Kapoor"
+author: "Sacha Kapoor changed by Micaela Palacios"
 date: "27 October 2023 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
@@ -189,11 +189,11 @@ Step 2 yields a sample of $R^2$ statistics: $\{R_1^2, R_2^2,..., R_K^2\}$. These
 # Cross Validation Example
 
 ```{r}
-SC <- read.csv("../Data/semiconductor.csv")
-full <- glm(FAIL ~ ., data=SC, family=binomial)
-1 - full$deviance/full$null.deviance
+SC <- read.csv("C:/Users/micap/Documents/GitHub/data-science/data/semiconductor.csv")
+full <- glm(FAIL ~ ., data=SC, family=binomial) #we created an object (model bc it is a glm) "full", Fail glm on all covariates.  family=binomial specifies that it's a logistic regression model for binary data.
+1 - full$deviance/full$null.deviance # this calculates R sqr. 
 ```
-
+It says our model predicts 56% of variation in failure outcomes.
 We proceed in three steps in R. 
 
   1. Define functions for the Deviance and $R^2$ in R. 
@@ -209,40 +209,42 @@ We proceed in three steps in R.
 ## first, define the deviance and R2 functions
 
 ## pred must be probabilities (0<pred<1) for binomial
-deviance <- function(y, pred, family=c("gaussian","binomial")){
-	family <- match.arg(family)
-	if(family=="gaussian"){
-		return( sum( (y-pred)^2 ) )
+deviance <- function(y, pred, family=c("gaussian","binomial")){ #Define function that will calculate the deviance for the specified model family. The actual calculation will depend on the code inside the function. c("gaussian", "binomial") creates a vector of valid choices for the family argument.
+	family <- match.arg(family) #match.arg(family) ensures the input matches one of these choices. If the user does not specify a value for family, the first option ("gaussian") is used as the default. If an invalid option is given, match.arg raises an error.
+	if(family=="gaussian"){  #computes deviance differently depending on whether the model is Gaussian or Binomial.
+		return( sum( (y-pred)^2 ) ) # deviation expression
 	}else{
 		if(is.factor(y)) y <- as.numeric(y)>1
-		return( -2*sum( y*log(pred) + (1-y)*log(1-pred) ) )
+		return( -2*sum( y*log(pred) + (1-y)*log(1-pred) ) ) #prob of beta hat
 	}
 }
 
 ## get null devaince too, and return R2
-R2 <- function(y, pred, family=c("gaussian","binomial")){
+R2 <- function(y, pred, family=c("gaussian","binomial")){ #This code sets up the function to handle both Gaussian and Binomial cases and ensures the y variable is appropriately formatted for Binomial models.
 	fam <- match.arg(family)
 	if(fam=="binomial"){
 		if(is.factor(y)){ y <- as.numeric(y)>1 }
 	}
-	dev <- deviance(y, pred, family=fam)
+	dev <- deviance(y, pred, family=fam) #type of distribution gaussian or binomial
 	dev0 <- deviance(y, mean(y), family=fam)
 	return(1-dev/dev0)
 }
 ```
 
----
+--- 
 
 # Step 2 - K-fold Partition/Experiment
+before we prepared to calculate deviance (also null) and Rsq now the experiment:
 
 ```{r}
 # setup the experiment
+set.seed(123)
 n <- nrow(SC) # the number of observations
 K <- 10 # the number of `folds'
 # create a vector of fold memberships (random order)
 foldid <- rep(1:K,each=ceiling(n/K))[sample(1:n)]
 # create an empty dataframe of results
-Out <- data.frame(full=rep(NA,K)) 
+Out <- data.frame(full=rep(NA,K)) #K rows, all initialized with NA, rep is repeat to fill column
 # use a for loop to run the experiment
 for(k in 1:K){ 
 	train <- which(foldid!=k) # train on all but fold `k'
@@ -254,7 +256,7 @@ for(k in 1:K){
 	predfull <- predict(rfull, newdata=SC[-train,], type="response")
 
 	## calculate and log R2
-	Out$full[k] <- R2(y=SC$FAIL[-train], pred=predfull, family="binomial")
+	Out$full[k] <- R2(y=SC$FAIL[-train], pred=predfull, family="binomial") #rows not training that we chose at random,Stores the result in the kth position of the full column of the Out object.
 
 	## print progress
 	cat(k, " ")
@@ -276,7 +278,7 @@ boxplot(Out, col="plum", ylab="R2")
 
 ```{r}
 ## what are the average Out R2?
-colMeans(Out) 
+colMeans(Out) # too many folds and not enough data could lead to NaN, too many folds makes negative bigger
 ```
 
 So we have a negative $R^2$. How? 
@@ -416,15 +418,15 @@ Algo is fast and more stable than backward stepwise regression (BSR):
 .pull-left[
 
 ```{r}
-null <- glm(FAIL~1, data=SC)
-fwd <- step(null, scope=formula(full), dir="forward")
+null <- glm(FAIL~1, data=SC) #Fits a null model (intercept-only model) to the SC dataset, where FAIL is the dependent variable
+fwd <- step(null, scope=formula(full), dir="forward") #scope=formula(full): Specifies the full set of predictors that can be included in the model. dir="forward": Indicates that the stepwise selection should start from the null model and add predictors one by one, based on model improvement.
 ```
 ]
 
 .pull-right[
 
 ```{r}
-length(coef(fwd))
+length(coef(fwd)) #we end with 69 rows which tells us model has 68 controls + intercept
 ```
 
 Algo works up from 1 to 68 input signals (covariates). Stops because lower AIC for 68-signal model than for 69-signal model. This is the "best model" according to this greedy algorithm. 
@@ -545,17 +547,18 @@ web$site <- factor(web$site, levels=1:length(sitenames), labels=sitenames)
 ## also factor machine id
 web$id <- factor(web$id, levels=1:length(unique(web$id)))
 ## get total visits per-machine and % of time on each site
-## tapply(a,b,c) does c(a) for every level of factor b.
+## tapply(a,b,c) does c(a) for every level of factor b. (total number of visits)
 machinetotals <- as.vector(tapply(web$visits,web$id,sum)) 
 visitpercent <- 100*web$visits/machinetotals[web$id]
 ## use this info in a sparse matrix
-## this is something you'll be doing a lot; familiarize yourself.
+## this is something you'll be doing a lot; familiarize yourself. 
+#Creates a sparse matrix xweb representing the percentage of visits for each site per machine.
 xweb <- sparseMatrix(
 	i=as.numeric(web$id), j=as.numeric(web$site), x=visitpercent,
 	dims=c(nlevels(web$id),nlevels(web$site)),
 	dimnames=list(id=levels(web$id), site=levels(web$site)))
 # what sites did household 1 visit?
-#head(xweb[1, xweb[1,]!=0])
+head(xweb[4, xweb[1,]!=0]) # sites visited by the first household, filtering out sites with zero visits.
 ## now read in the spending data 
 yspend <- read.csv("../Data/browser-totalspend.csv", row.names=1)  # us 1st column as row names
 yspend <- as.matrix(yspend) ## good practice to move from dataframe to matrix
@@ -565,6 +568,7 @@ yspend <- as.matrix(yspend) ## good practice to move from dataframe to matrix
 ```{r}
 ## run a lasso path plot
 spender <- gamlr(xweb, log(yspend), verb=TRUE); spender
+
 ```
 
 ---
@@ -597,7 +601,10 @@ Obtain a path of candidate models $\widehat{\boldsymbol\beta_1}, \widehat{\bolds
 
 .pull-left[
 ```{r}
+#The cv.gamlr() function will split the data into training and validation sets and use cross-validation to find the best regularization parameters (lambda) for the model.
+#xweb: sparsematrix log(y)
 cv.spender <- cv.gamlr(xweb, log(yspend))
+
 plot(cv.spender)
 ```
 ]
@@ -626,6 +633,8 @@ Intuition:
 Inspect selection at minimum (do this over and over. Do you get the same results? Why or why not?)
 
 ```{r}
+#extracts and displays the coefficients from the regularized regression model (all coefficients from model) that corresponds to the minimum cross-validation error.
+# These coefficients indicate the relationship between each site and the log-transformed spending variable (yspend).
 betamin = coef(cv.spender, select="min"); betamin
 ```
 

@@ -1,26 +1,35 @@
 ## Read Me for Week 4. Regularization
 Learning R:
-- changing values of the tail and head 
-- changing how to see the matrix of dummies, realized (x, number) gives you that number of rows
-- I realized I was having problems to install packages with R (new device) because I was opening the app from Git instead of installing it locally when opening the R in my device. Before it did not happen because of the folder in which I installed Git and R manually.
-- Put what the function parts do (noted with #)
-- ; to code more things in one line
-- You can work uploading two datasets and just calling them!! Oj and email both stay in my data environment and I can just call them when I need them. 
-- Hovering the mouse on top of the formulas shows a picture of the formulas
-
+- The data I uploaded before is still in my R environment!! I can just call on it, do not need to "upload" it everytime
+- learned to use cv.gamlr, cross validates for you, you first need to create a sparse matrix
+- you can use that to take the lambda with minimum CV error
 
 R and Content: 
--  I got the Warning message: glm.fit: fitted probabilities numerically 0 or 1 occurred --> this could be many outliars or too many variables
-
+- my plots look different than the slides --> randomization -->data points included in each fold may be different
+- to allow repetitions we can set a seed. I learned how to set a seed and that it cannot be negative.
+- making more folds really takes up more time
+- if i make too many folds I get NaN as average of Rsq, this could be because od insufficient data. Also, lowering folds too much makes the negative (Rsq) bigger. 
 
 
 
 Going through the content slowly to solve some mind fogs: 
-- We are working with GLM not LM therefore when regressing like this, R reports df, null deviance, residual deviance and AIC.This made me focus more on the differences between the kinds of regressions.  
-- GLM -->link functions to allow for non-linear relationships, relate predictors to response, allows different error distributions, uses makimum likelihood estimation.
-- LM--> normal distribution of errors, Uses least squares method for estimation. (what we did before)
-- mybrand was were we stored the releveled variable! you can change this in r to change who you compare to (dummy part)
-- exp(coef) tells you how the odds change when the predictor increases by one unit.
-- 1/exp(coef) shows how the odds change when the predictor decreases by one unit.
-- residual deviance of the model--> how far model is from the data. 
-- null deviance --> deviance from null model (only intercept), how well the simplest model fits. 
+- We are working with binary data! the regression is on binary data. 
+- I add some comments on the slides (from notes from class)
+- We compute deviance differently depending on whether the model is Gaussian or Binomial.
+- Gaussian --> linear
+- Binomial --> logistic
+- Forward stepwise regression: adds covariates on each step, the deviance increases and flattens. 
+- CV picks model with less error, R can show you its coefficients
+
+Random (question "hidden" in the data): 
+- Household 4 visited:   atdmt.com          yahoo.com 
+       13.54780245        18.50928863 
+           msn.com         google.com 
+        0.29451744         1.11010421 
+           aol.com questionmarket.com 
+        0.06796556         3.19438151 
+- Household 1:      
+atdmt.com      yahoo.com      whenu.com 
+     4.0520260     11.8559280      0.0000000 
+weatherbug.com        msn.com     google.com 
+     0.0000000      0.2501251      6.5282641 
