@@ -1,7 +1,7 @@
 ---
 title: "FEM11213 - Data Science and HR Analytics"
 subtitle: "05 - Classification"
-author: "Sacha Kapoor"
+author: "Sacha Kapoor changed by micaela"
 date: "27 October 2023 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
@@ -155,8 +155,9 @@ plot(Si ~ type, data=fgl, col=c(grey(.2),2:6), las=2)
 Scale explanatory variables before measuring distances 
 
 ```{r}
-x <- scale(fgl[,1:9]) # column 10 is class label, scale converts to mean 0 sd 1
-apply(x,2,sd) # apply function sd to columns of x
+#fgl data in R
+x <- scale(fgl[,1:9]) # select column 1-9, column 10 is class label(target), scale converts to mean 0 sd 1
+apply(x,2,sd) # apply function sd to columns of x, 2 is for column wise
 ```
 
 ---
@@ -245,6 +246,9 @@ Given these probabilities, we would then pick the classification that yields the
 
 ```{r, echo=FALSE}
 #### ******* German Credit Data ******* ####
+#Re-labeling and re-ordering categorical variables to make them more interpretable.
+#Creating a new binary variable (rent) based on an existing feature (housing).
+#Subsetting the dataset to retain only the relevant columns for further analysis.
 credit <- read.csv("../Data/credit.csv")
 ## re-level the credit history and checking account status
 credit$history = factor(credit$history, levels=c("A30","A31","A32","A33","A34"))
@@ -272,8 +276,10 @@ dim(credit)
 
 ```{r}
 library(gamlr)
-source("naref.R")
-credx <- sparse.model.matrix(Default ~ . ^ 2, data=naref(credit)); colnames(credx)
+source("C:/Users/micap/Documents/GitHub/data-science/data/naref.R")
+credx <- sparse.model.matrix(Default ~ . ^ 2, data=naref(credit)); colnames(credx) #create sparsemo
+#takes all variables and crosses them
+#The ^2 indicates that the model matrix should include not only the main effects of the predictors but also their pairwise interaction terms.
 ```
 
 ---
@@ -281,8 +287,8 @@ credx <- sparse.model.matrix(Default ~ . ^ 2, data=naref(credit)); colnames(cred
 .pull-left[
 
 ```{r}
-default <- credit$Default
-credscore <- cv.gamlr(credx, default, family="binomial")
+default <- credit$Default #creating dummy
+credscore <- cv.gamlr(credx, default, family="binomial") #CV excercise
 ```
 
 ]
@@ -303,9 +309,9 @@ plot(credscore)
 
 ```{r}
 sum(coef(credscore, s="min")!=0) # min
-sum(coef(credscore$gamlr)!=0) # AICc
-sum(coef(credscore$gamlr, s=which.min(AIC(credscore$gamlr)))!=0) # AIC
-# the OOS R^2
+sum(coef(credscore$gamlr)!=0) # construct AICc (adjusted)
+sum(coef(credscore$gamlr, s=which.min(AIC(credscore$gamlr)))!=0) # AIC(regular) you compare different models
+# the OOS R^2. not good if so small.
 1 - credscore$cvm[credscore$seg.min]/credscore$cvm[1]
 ```
 
@@ -316,7 +322,7 @@ sum(coef(credscore$gamlr, s=which.min(AIC(credscore$gamlr)))!=0) # AIC
 ## In sample probability estimates
 pred <- predict(credscore$gamlr, credx, type="response")
 pred <- drop(pred) # remove the sparse Matrix formatting
-boxplot(pred ~ default, xlab="default", ylab="prob of default", col=c("pink","dodgerblue"))
+boxplot(pred ~ default, xlab="default", ylab="prob of default", col=c("maroon","darkgreen"))
 ```
 
 ---
@@ -353,8 +359,9 @@ where *sensitivity* is defined below. Boxplots on last slide suggest this is a h
 # Classification Rule 
 
 ```{r}
-rule <- 1/5 # move this around to see how these change
-sum( (pred>rule)[default==0] )/sum(pred>rule) ## false positive rate at 1/5 rule
+#p, you decide the value
+rule <- 2/3 # move this around to see how these change
+sum( (pred>rule)[default==0] )/sum(pred>rule) ## false positive rate at 1/5 rule group that didnt default
 sum( (pred<rule)[default==1] )/sum(pred<rule) ## false negative rate at 1/5 rule
 ```
 False positive rate is high because we put more weight on defaults. We treat defaults as being more costly than the alternative. 
@@ -406,15 +413,15 @@ Can compute $ROC$ at different classifications thresholds. $ROC$ plots show the 
 ## OOS ROC curve
 
 ```{r, echo=FALSE}
-# refit the model using only 1/2 of data
-test <- sample.int(1000,500)
+# refit the model using only 1/2 of data and predict probabilities
+test <- sample.int(1000,500) #creates indices for the data
 credhalf <- gamlr(credx[-test,], default[-test], family="binomial")
 predoos <- predict(credhalf, credx[test,], type="response")
 defaultoos <- default[test]
 ```
 
 ```{r, echo=FALSE}
-source("roc.R")
+source("C:/Users/micap/Documents/GitHub/data-science/data/roc.R")
 png(file="ROCCurve.png", width=600, height=350)
 par(mai=c(.9,.9,.2,.1), mfrow=c(1,2))
 roc(p=pred, y=default, bty="n", main="in-sample")
@@ -517,6 +524,7 @@ Can let $\lambda_k$ vary by class but we don't do that here.
 # LASSO penalized multinomial regression example 
 
 ```{r}
+#it also tells us non zero coefficients and the mean adjusted for SE
 library(glmnet)
 xfgl <- sparse.model.matrix(type~.*RI, data=fgl)[,-1] #Design matrix includes chemical composition variables and all their interactions with refractive index (RI).
 gtype <- fgl$type
@@ -538,7 +546,8 @@ Out of sample deviance across CV folds for multinomial logistic regression on gl
 
 .pull-right[
 ```{r}
-par(mfrow=c(2,3), mai=c(.6,.6,.4,.4)) 
+#different responses
+par(mfrow=c(2,3), mai=c(.6,.6,.4,.4)) #2x3 grid and adjusting margin plots
 plot(glassfit$glm, xvar="lambda")
 ```
 
@@ -549,7 +558,7 @@ Regularization paths for glmnet multinomial logistic lasso regression.
 ---
 
 ```{r}
-B  <- coef(glassfit, select="min"); B ## extract coefficients
+B  <- coef(glassfit, select="min"); B ## extract coefficients, we take min no SE adjusted
 B <- do.call(cbind, B) 
 colnames(B) <- levels(gtype) # column names dropped in previous command. This command adds them back.
 ```
@@ -577,7 +586,7 @@ where $\Delta\beta_k = \beta_{ka} - \beta_{kb}$ is difference between the slope 
 
 DeltaBMg <- B["Mg", "WinNF"] - B["Mg", "WinF"]; DeltaBMg; #B is a matrix. Fixed Row. Vary Columns. k is Mg, a is WinNF, b is WinF. 
 exp(DeltaBMg);
-1 - exp(DeltaBMg)
+1 - exp(DeltaBMg) #how odds of one option change relative to other option
 ```
 1 unit increase in Mg decreases odds of nonfloat glass over float glass by 0.36. A similar set of calculations shows that, by contrast, a 1 unit increase in Mg increases odds of nonfloat glass over container glass by 0.66. 
 
@@ -606,7 +615,7 @@ probfgl <- predict(glassfit, xfgl, type="response"); dim(probfgl); head(probfgl,
 #gives in-sample probabilities. Note: this is nXKX1 array. Need nXK array. To convert: 
 probfgl <- drop(probfgl); #use dim(probfgl) to check dim is 214 by 6
 n <- nrow(xfgl)
-trueclassprobs <- probfgl[cbind(1:n, gtype)]; head(trueclassprobs,n=3); tail(trueclassprobs,n=3) 
+trueclassprobs <- probfgl[cbind(1:n, gtype)]; head(trueclassprobs,n=3); tail(trueclassprobs,n=3) #we extract the column of win f (3)
 #for each obs there is one probability that corresponds to realized shard for that obs. Last command extracts those probabilities. 
 #Note use of a matrix to index a matrix.
 ```
@@ -616,6 +625,7 @@ trueclassprobs <- probfgl[cbind(1:n, gtype)]; head(trueclassprobs,n=3); tail(tru
 .pull-left[
 
 ```{r}
+#in good data info is disntinct from others to let us predict 
 plot(trueclassprobs ~ gtype, col="lavender", varwidth=TRUE,
 	xlab="glass type", ylab="prob( true class )") 
 ```
