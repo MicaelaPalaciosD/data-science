@@ -1,0 +1,734 @@
+---
+title: "FEM11213 - Data Science and HR Analytics"
+subtitle: "07 - HR Application"
+author: "Sacha Kapoor"
+date: "03 November 2023 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: [default, "style/middlebury.css", "style/middlebury-fonts.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: "16:9"
+
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+
+knitr::opts_chunk$set(eval = TRUE,
+               echo = TRUE,
+               warning = FALSE,
+               message = FALSE,
+               cache = FALSE)
+
+htmltools::tagList(rmarkdown::html_dependency_font_awesome())
+```
+
+```{r plots_and_figures, include=FALSE}
+library(ggplot2)
+library(kableExtra)
+
+theme_set(theme_gray(15))
+```
+
+```{r, references, echo=FALSE, cache=FALSE}
+library(RefManageR)
+BibOptions(check.entries = FALSE, 
+           bib.style = "numeric", 
+           cite.style = "authoryear", 
+           style = "markdown",
+           hyperlink = FALSE, 
+           dashed = FALSE)
+bib <- ReadBib("../refs/references.bib", check = FALSE)
+```
+
+
+class: title-slide-section-gray
+
+# One-armed bandits 
+
+.pull-left[
+
+Slot machines are called "one-armed bandits". 
+  * Machines have one arm. 
+  * Machines rob people of their money. 
+  
+Typically model arms as yield random payouts when pulled. 
+  * Payouts are independent of past payouts. 
+  * Different machines have different payouts. 
+  * Payouts are not listed. Have to experiment to learn payout distribution for each machine.  
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width = "100%", fig.align='center'}
+knitr::include_graphics("figs/SlotMachine.png")
+```
+]
+---
+
+# Multi-armed bandits 
+
+.pull-left[
+
+Slot machines are called "one-armed bandits". 
+  * Machines have one arm. 
+  * Machines rob people of their money. 
+  
+Typically model arms as yield random payouts when pulled. 
+  * Payouts are independent of past payouts. 
+  * Different machines have different payouts. 
+  * Payouts are not listed. Have to experiment to learn payout distribution for each machine.  
+
+Two-armed bandit
+  * You first learn payout distribution at one machine.  
+  * You then face a dilemma
+    + continue exploiting first machine 
+    + experiment with second machine  
+    + May learn that payout distribution is more lucrative 
+
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width = "100%", fig.align='center'}
+knitr::include_graphics("figs/SlotMachine.png")
+```
+]
+---
+
+# Multi-armed bandits 
+
+.pull-left[
+
+Slot machines are called "one-armed bandits". 
+  * Machines have one arm. 
+  * Machines rob people of their money. 
+  
+Typically model arms as yield random payouts when pulled. 
+  * Payouts are independent of past payouts. 
+  * Different machines have different payouts. 
+  * Payouts are not listed. Have to experiment to learn payout distribution for each machine.  
+
+Two-armed bandit
+  * You first learn payout distribution at one machine.  
+  * You then face a dilemma
+    + continue exploiting first machine 
+    + experiment with second machine  
+    + May learn that payout distribution is more lucrative 
+
+Want to know if there is a sequential strategy for pulling arms that maximizes cumulative payout. 
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width = "100%", fig.align='center'}
+knitr::include_graphics("figs/SlotMachine.png")
+```
+]
+
+---
+
+# Multi-armed bandits 
+
+Suppose there are 2 arms. You have 10 pulls. You pulled each arm 5 times. You earned the following (in euros):
+
+
+Round     | 1 | 2  | 3  | 4 | 5 | 6 | 7 | 8 | 9 | 10 | Avg. Payout |
+------------------------------------------------------------------:|
+LEFT      | 0 |    | 10 | 0 |   | 0 |   |   |   | 10 | 4  euros    |  
+RIGHT     |   | 10 |    |   | 0 |   | 0 | 0 | 0 |    | 2  euros    |
+
+Source: 
+
+Suppose that you are given 10 more pulls. What do you do? Do you explore right arm even though it looks inferior? Or do you pull left arm all 10 times? Finding "right" balance between exploring and exploiting is essence of bandit problems. 
+
+---
+
+# Bernouilli bandit 
+
+.pull-left[ 
+
+  * $K$ arms. 
+  * Pulling an arm can yield a success or failure. 
+    + $\theta_1$ is probability of success for arm $1$, $\theta_2$ for arm $2$, and so on and so forth. 
+    + Agent does not know success probabilities $\boldsymbol\theta = (\theta_1,...,\theta_K)$ but can learn them via experimentation.
+      - they do not change from period to period. 
+      - agent gets new information from period to period. 
+  * Roughly speaking, if you have $T$ periods ( $T>K$ and relatively large), then your goal is to maximize the number of successes in these $T$ periods. 
+]
+
+.pull-right[ 
+
+
+
+]
+
+
+---
+
+# Bernouilli bandit 
+
+.pull-left[ 
+
+  * $K$ arms. 
+  * Pulling an arm can yield a success or failure. 
+    + $\theta_1$ is probability of success for arm $1$, $\theta_2$ for arm $2$, and so on and so forth. 
+    + Agent does not know success probabilities $\boldsymbol\theta = (\theta_1,...,\theta_K)$ but can learn them via experimentation.
+      - they do not change from period to period. 
+      - agent gets new information from period to period. 
+  * Roughly speaking, if you have $T$ periods ( $T>K$ and relatively large), then your goal is to maximize the number of successes in these $T$ periods. 
+]
+
+.pull-right[ 
+
+.big[__Example__]
+
+  * "Arms" can represent different banner ads to display on a website. 
+    + target population is the visitors the website
+    + success is an ad click or sale of the item
+    + $\theta_k$ is then the click through rate or conversion rate among target population
+    + website wants to trade off exploitation for exploration to maximize the number of click throughs or conversions
+    + Naive solution: 
+      - allocated fixed number of time periods to exploration
+      - sample each arm uniformly at random 
+      
+
+]
+
+
+---
+
+# Beta Bernouilli bandit (BBB)
+
+.pull-left[ 
+
+  * $K$ arms. 
+  * Pulling an arm can yield a success or failure. 
+    + $\theta_1$ is probability of success for arm $1$, $\theta_2$ for arm $2$, and so on and so forth. 
+    + Agent does not know success probabilities $\boldsymbol\theta = (\theta_1,...,\theta_K)$ but can learn them via experimentation.
+      - they do not change from period to period. 
+      - agent gets new information from period to period. 
+  * Roughly speaking, if you have $T$ periods ( $T>K$ and relatively large), then your goal is to maximize the number of successes in these $T$ periods. 
+]
+
+.pull-right[ 
+
+.big[__BBB__]
+
+  * Let $x_t$ be pull at time $t$. $x_t$ can be one of $1,...,K$.  
+  * If $x_1=2$, Reward of $r_1=1$ is generated with probability $P(r_1 = 1|x_1=2, \boldsymbol\theta) = \theta_2$
+  * After observing $r_1$, agent pulls $x_2$, observes $r_2$, and process continues.
+  * Suppose the agent has some prior belief about the payout distribution at each arm: 
+  
+  $p(\theta_k) = \frac{\Gamma(\alpha_k + \beta_k)}{\Gamma(\alpha_k)\Gamma(\beta_k)} \theta_k^{\alpha_k - 1}(1-\theta_k)^{\beta_k - 1}$
+  
+  where 
+    + $\Gamma$ denotes the gamma function, 
+    + $\alpha_k$ is the prior count of successes for arm $k$, and 
+    + $\beta_k$ is the prior count of failures for arm $k$. 
+    
+  * Belief updating works as follows. Stick with $\alpha_k$ and $\beta_k$ if $x_t\neq k$. Go to $\alpha_k + r_t$ and $\beta_k + 1 - r_t$ if $x_t = k$.
+]
+
+
+
+---
+
+# Hiring as exploration 
+
+`r Citet(bib, "LiEtAl21")` noticed that hiring algorithms focus on exploitation by design. 
+
+  * Algorithms predict the hiring potential of candidate on the basis of candidates who were interviewed and hired in the past. 
+  
+  * Candidate pool consists of candidates who are deemed "good enough" to be interviewed and or hired. 
+  
+  * If pool is representative of historically privileged groups, then traditional hiring algorithm will implicitly favor people from these groups. They will be interviewed and hired a disproportionate amount of time. 
+  
+  * If diversity is in fact desirable, then it may be profitable to expand algorithms to explore the viability of non-standard groups. 
+  
+  * May reveal minority candidates who generate more cumulative profit than the equivalent majority candidate.  
+
+---
+
+# Contextual bandits and hiring 
+
+.pull-left[
+
+.big[__Standard multi-armed bandit approach__]
+
+Each applicant is an arm. Pulling arm for candidate $i$ in round $t$ is modeled as setting interview decision $I_{it}$ to 1. Set to 0 if candidate not interviewed. "Reward" $Y_{it}$ for hiring each applicant is 
+
+$$Y_{it} = \begin{cases}
+H_{it} - c_t & I_{it}=1\\
+0 & I_{it}=0
+\end{cases}$$
+
+  * $H_{it}$ is 1 if applicant would be hired if interviewed, 0 otherwise. 
+  * $c_t$ is cost per interview. 
+  * Rewards from realized interview choices are observed after each period $t$. 
+
+Objective of firm is to choose $I_{it}$ to minimize expected cumulative regret: reward difference between the best and actual choice at a given time. 
+
+]
+
+.pull-right[
+
+]
+
+---
+
+# Contextual bandits and hiring
+
+.pull-left[
+
+.big[__Standard multi-armed bandit approach__]
+
+Each applicant is an arm. Pulling arm for candidate $i$ in round $t$ is modeled as setting interview decision $I_{it}$ to 1. Set to 0 if candidate not interviewed. "Reward" $Y_{it}$ for hiring each applicant is 
+
+$$Y_{it} = \begin{cases}
+H_{it} - c_t & I_{it}=1\\
+0 & I_{it}=0
+\end{cases}$$
+
+  * $H_{it}$ is 1 if applicant would be hired if interviewed, 0 otherwise. 
+  * $c_t$ is cost per interview. 
+  * Rewards from realized interview choices are observed after each period $t$. 
+
+Objective of firm is to choose $I_{it}$ to minimize expected cumulative regret: reward difference between the best and actual choice at a given time. 
+
+]
+
+.pull-right[
+
+.big[__Contextual bandit approach__]
+
+Standard approach does not allow for "context" to influence $I_{it}$ and $H_{it}$. To allow for context, can assume   
+
+\begin{equation*}
+\mathbb{E}[H_{it}|\mathbf{x}_{it}] = \mu(\mathbf{x}_{it}'\theta_t^*).
+\end{equation*}
+
+where $\mu$ is link function and $\theta_t^*$ is a vector describing true relationship between $\mathbf{x}_{it}$ and conditional mean for $H_{it}$. Values of $\theta_t^*$ unknown. Further assume   
+
+\begin{equation*}
+I_{it} = \mathbb{1}(s_t(\mathbf{x}_{it})> c_t) 
+\end{equation*}
+
+where $s_t$ is score firm assigns to candidates with characteristics $\mathbf{x}_{it}$. Score can reflect firm's beliefs about hiring potential. 
+
+Objective of firm is thus to choose this score function to minimize expected cumulative regret. 
+
+]
+
+---
+
+# Contextual bandit solution 
+
+  * "Greedy" algorithm gives one class of solution to bandit problems. Bases interview choice on current period awards exclusively. For example: 
+    + firm can estimate $\hat{\theta}_t$ and then interview $I_{it}=1$ $i$ at $t$ if $\mu(\mathbf{x}_{it}\hat{\theta}_t)>c_t$. 
+    + firm would ignore $c_{t+1}$ or $c_{t-1}$ for instance. 
+    
+  * No generic optimal strategy for contextual bandit problems. 
+    + Generally rely on tractable algorithms. 
+
+  * Tractable algorithms trade off expected candidate quality against improving estimates of hiring potential in future. 
+    + Interesting because candidate set expanded to include candidates that would not normally be sampled. 
+    + Optimal solution interviews candidate with highest combined expected reward PLUS exploration bonus. 
+    + If algorithm is less familiar with the covariates, then the candidate gets a bonus. 
+    + The more unfamiliar, the higher the bonus. 
+
+---
+
+# Data
+
+88666 job applications from January 2016 to April 2019. 
+
+Divide sample into two periods: 1. Jan 2016 - Dec 2017 (48719 applicants, 2617 interviews); 2. Jan 2018 - Apr 2019 (39947 applicants, 2275 interviews). 
+
+Input features
+  * applicant educational background: community college, associate degree, bachelor, other advanced degrees, elite university, where attended (India, China, Europe), number of degrees, quant background 
+  * work experience: business background, internship, service sector, Fortune 500 work history
+  * referral status
+  * basic demographics (race, gender)
+  * type of position applied for
+  * number of applications
+  * time between first and most recent application
+
+---
+
+```{r, echo=FALSE, out.width="80%"}
+  knitr::include_graphics("figs/HiringAsExplorationTab1.png")
+```
+
+---
+
+```{r, echo=FALSE, out.width="60%"}
+  knitr::include_graphics("figs/HiringAsExplorationTabA1.png")
+```
+
+Authors convert this raw info into 106 categorical or numerical variables. Variables are called "features". Numerical variables are standardized. Only use info available as of application date (because interest is interview phase alone). 
+
+---
+
+# Data - interview outcomes 
+
+Observe: 
+
+  * whether candidate was invited for an interview
+  * interview ratings 
+  * whether candidate received an offer 
+  * whether candidate accepted offer 
+  * whether candidate was hired
+  
+3-10% of applicants invited for interview. 20% who are interviewed receive an offer. 50% of applicants who receive an offer accept and are hired.   
+
+Hiring is a key outcome. But only observe hiring decisions among persons interviewed. 
+
+Also observe performance ratings on the job for 180 applicants who are hired and employed for at least 6 months. Sample size too small for training purposes. But use this info to see if there is a link between hiring likelihood and job performance. 
+
+--- 
+
+---
+
+# Models 
+
+Consider three approaches: 
+
+  1. Static supervised learning. Period 1 is training. Period 2 is test. 
+  2. Updating supervised learning. Period 1 is training. Period 2 is for training and learning. 
+  3. Contextual bandit (UCB) model. Period 1 is training. Period 2 is for training and learning. 
+
+Training data is not a random sample. Why? (better approximation of reality)
+
+---
+
+# Static supervised learning (SSL or static SL)
+
+.pull-left[
+
+First step is to predict applicant's likelihood of being hired given that they were interview. Recall that: 
+
+\begin{align*}
+I_{it}^{SSL} = \mathbb{1}(s_0^{SSL}(\mathbf{x}_{it}) > c_t)
+\end{align*}
+
+where 
+
+  * $s_0^{SSL}(\mathbf{x}_{it}) = \mathbb{E}[H_{it}|\mathbf{x}_{it},D_0]$
+  * $D_0$ is data available to firm before interview invitation stage. $D_0$ is not updated. 
+]
+
+.pull-right[
+To predict applicant's likelihood, form an estimate of $s_0^{SSL}(\mathbf{x}_{it})$ using LASSO logistic regression and 3-fold cross validation. 
+  * OOS performance evaluated on randomly selected balanced samples from test sample. 
+  * AUC (area under curve) for ROC is 0.64. Model ranks interviewed/hired applicant ahead interviewed/unhired applicant 64 percent of the time.
+]
+
+---
+```{r, echo=FALSE, out.width="100%"}
+  knitr::include_graphics("figs/HiringAsExplorationfigA1.png")
+```
+---
+
+# Some caveats 
+
+Note potential for selection bias in training sample. We might observe everything human recruiters see. Some of these are unobservable and may be relevant for interview/hiring decision. This type of sample selection can bias predictions.
+
+There are commercial vendors of hiring algorithms. These vendors set $H_{it}=0$ for applicants who are not invited to an interview. Authors do not do this because it can exacerbate bias. How true is this? 
+
+---
+
+# Updated supervised learning (USL or updating SL)
+
+.pull-left[
+
+Divide 2018-2019 data into "rounds" of 100 applicants. Model selects applicants in each round. 
+
+Use selected applicants to update training data on the basis of (hiring) outcomes for applicants whose hiring outcomes are actually observed. 
+
+From earlier setup: 
+
+\begin{align*}
+I_{it}^{USL} = \mathbb{1}(s_t^{USL}(\mathbf{x}_{it}) > c_t)
+\end{align*}
+
+where 
+
+  * $s_t^{USL}(\mathbf{x}_{it}) = \widehat{\mathbb{E}}[H_{it}|\mathbf{x}_{it},D_t^{USL}]$
+  * $D_t^{USL}$ is the training data available to the algorithm at round $t$.
+
+]
+
+.pull-right[
+
+  * Sample selection limits this approach. 
+
+  * Approach relies heavily on the sample of candidates who were chosen for an interview. 
+    + Observe hires from this sample, and can infer their hiring potential relative to those who were interviewed but not hired. 
+    + Authors cannot infer hiring potential of people who were not selected for an interview. 
+
+]
+
+---
+# Upper confidence bound (UCB)
+
+.pull-left[
+
+Calculate predicted quality $\widehat{\mathbb{E}}[H_{it}|\mathbf{x}_{it}; D_t^{UCB}]$ using a regularized logistic regression. 
+
+In round $t=0$ of testing sample, UCB and SL models have same predicted quality estimate. Both are based on baseline model trained on 2016-2017 sample. 
+
+UCB model makes interview decisions for applicant $i$ in period $t$ using a different scoring function: 
+
+\begin{align*}
+I_{it}^{UCB} = \mathbb{1}(s_t^{UCB}(\mathbf{x}_{it}) > c_t)
+\end{align*}
+
+where 
+
+  * $s_t^{UCB}(\mathbf{x}_{it}) = \widehat{\mathbb{E}}[H_{it}|\mathbf{x}_{it}; D_t^{UCB}] + B(\mathbf{x}_{it};D_t^{UCB})$
+  * $D_t^{USL}$ is the training data available to the algorithm at round $t$.
+  * $B(\mathbf{x}_{it};D_t^{UCB}) = \sqrt{(\mathbf{x}_{it} - \overline{\mathbf{x}}_{t})'V_t^{-1}(\mathbf{x}_{it} - \overline{\mathbf{x}}_{t})}$
+  * $V_t=\sum_{j\in D_t^{UCB}} (\mathbf{x}_{jt} - \mathbf{x}_{t})(\mathbf{x}_{jt} - \mathbf{x}_{t})'$ 
+
+]
+
+.pull-right[
+
+  * $B(\mathbf{x}_{it};D_t^{UCB})$ is exploration bonus. Measures distinctiveness of $i$'s covariates relative to training data $D_t^{UCB}$.  
+    + bonus larger for variables that have lower variance 
+    
+* Candidates judged on their mean expected quality plus standard error
+of their estimated quality. This is where the name upper confidence bound (UCB) comes from. 
+
+* We don't show it here, but this strategy minimizes regret asymptotically. 
+  
+]
+
+---
+
+# Feasible versus Live Model Implementation
+
+.pull-left[
+
+.big[__Live implementation__]
+
+Live implementation ideal. Live implementation would take algorithm seriously, use it to select applicants, and record interview outcomes.
+  * Example: 
+    + Suppose UCB model wants to select 50 Black applicants with humanities degrees to explore applicant space. 
+    + Ideally would update UCB training data on basis of all 50 candidates 
+    
+]
+
+.pull-right[
+
+.big[__Feasible implementation__]
+
+Feasible implementation not ideal. Constrained by realized interview outcomes. Only realize interview outcomes for candidates chosen for interviews by humans. 
+  * Example: 
+    + Suppose UCB model wants to select 50 Black applicants with humanities degrees to explore applicant space. 
+    + In practice, update UCB training data using 5 candidates who were actually interviewed. 
+]
+
+---
+
+# Feasible versus Live Model Implementation
+
+
+Implications of live versus for feasible implementation differs depending on whether or not human selection uses information that is unobservable to us.
+
+  * No selection on unobservables: 
+    + live and feasible algorithms select same candidates, 
+    + but algorithm is slower, 
+    + as more noise in exploration bonus. 
+    
+  * Selection on observables: 
+    + live and feasible algorithms can select different outcomes in long run. 
+    + Humans may focus on unobservable quality metrics for example. 
+    + Feasible algorithm on these 5 applicants would be more optimistic than an algorithm that uses all 50 applicants. 
+    + would select "too many" applicants from historically disadvantaged groups. 
+
+
+---
+
+# Quality of Selected Applicants
+
+Which algorithm selects the "best" candidates? 
+
+  * Exploration models trade off hiring potential in short run for regret minimization in long run. 
+    + Don't know if regret minimization translates into higher quality candidates in long run. 
+
+  * UCB and SL may select equal quality candidates in long run: 
+  
+  $\widehat{\mathbb{E}}[H_{it}|\mathbf{x}_{it}', D_t^{UCB}] = \widehat{\mathbb{E}}[H_{it}|\mathbf{x}_{it}', D_t^{USL}]$ for sufficiently large $t$.
+  
+  Algorithms arrive at similar estimates of quality in the long run because they observe enough applicants. 
+
+  * UCB and SL can make persistently different interview decisions in long run. For example, 
+
+---
+
+# Persistently different interview decisions e.g.
+  
+Suppose 
+
+  * observe one binary covariate $X$, 
+  * $\mathbb{E}[H|X=0] = 0.2$, 
+  * $\mathbb{E}[H|X=1] = 0.4$, 
+  * interview cost is 0.3.
+
+Suppose also that initial training data $D_0$ consists of 3 applicants
+  1. $X=0$,$H=1$
+  2. $X=0$,$H=0$
+  3. $X=1$,$H=0$
+      
+  * Static SL model would predict $\mathbb{E}[H|X=0, D_0] = 0.5$, $\mathbb{E}[H|X=1, D_0] = 0$ and then interview all $X=0$ applicants and no $X=1$ applicants. 
+    + Will do this forever because training data never updates. 
+  * Updating SL model would select $X = 0$ applicants unless it gets "a lot" of $H=0$, i.e. that makes $\mathbb{E}[H|X = 0;D^{USL}_t] < 0.3$. 
+    + Will never select $X=1$ applicants and will never learn their quality.  
+  * UCB would consider $X = 1$ applicants because of exploration bonus.
+    + Bonus is $\sqrt{2/3}$. 
+    + Increases chances of learning their true quality. 
+
+---
+
+# Long run (quality) benefits of UCB?
+
+Theoretical long run performance of UCB should be better. 
+
+Value added not clear. Especially if 
+  * quality is not evolving
+  * training data is comprehensive
+
+---
+
+# Implications for diversity?
+
+Unclear that UCB models would result in more diversity in long run. 
+
+For example, exploration can work against minority applicants. 
+  * Suppose UCB model initially selects more Indian applicants in order to explore, 
+  * Discovers that these additional candidates are particularly weak. Then may believe that these candidates are worse than would the SL model. 
+  * May decrease diversity
+
+---
+
+.pull-left[
+
+```{r, echo=FALSE, out.width="100%"}
+  knitr::include_graphics("figs/HiringAsExplorationFig1.png")
+```
+]
+
+.pull-right[
+
+Basically plotting 
+
+  * $\mathbb{E}[X|I = 1]$, 
+  * $\mathbb{E}[X|I^{SSL} = 1]$
+  * $\mathbb{E}[X|I^{USL} = 1]$
+  * $\mathbb{E}[X|I^{UCB} = 1]$
+]
+---
+
+
+```{r, echo=FALSE, out.width="65%"}
+  knitr::include_graphics("figs/HiringAsExplorationFigA3.png")
+```
+
+---
+
+.pull-left[
+
+```{r, echo=FALSE, out.width="100%"}
+  knitr::include_graphics("figs/HiringAsExplorationFigA5.png")
+```
+]
+
+.pull-right[
+
+No preference for demographic built into the ML models. So why are more Black and Hispanic applicants selected by UCB? 
+
+Figure A.5 shows Black and Hispanic applicants receive larger exploration bonuses on average. Larger bonuses reflect direct and indirect differences. Direct differences include population size by race. Indirect dierences include correlation between race and other variables that also factor into bonus calculations (see next slide). 
+]
+
+---
+
+.pull-left[
+
+```{r, echo=FALSE, out.width="100%"}
+  knitr::include_graphics("figs/HiringAsExplorationFigA6.png")
+```
+]
+
+.pull-right[
+
+Figure shows what proportion of total variation in exploration bonuses can be attributed
+to different categories of applicant covariates. 
+
+Applicant work history variables are especially important: 
+  * Black and Hispanic applicants receive higher exploration bonuses because their work experiences are more distinct.
+]
+
+---
+
+.pull-left[
+
+```{r, echo=FALSE, out.width="100%"}
+  knitr::include_graphics("figs/HiringAsExplorationFigA4.png")
+```
+]
+
+.pull-right[
+
+Are we observed short run diversity gains? Figure shows a relatively constant proportion of Black and Hispanic applicants  over time. 
+]
+
+---
+
+# Impacts on Quality of Interviewed Applicants
+
+Want to compare hiring potential across algorithms
+
+  * $\mathbb{E}[H|I = 1]$, 
+  * $\mathbb{E}[H|I^{SSL} = 1]$
+  * $\mathbb{E}[H|I^{USL} = 1]$
+  * $\mathbb{E}[H|I^{UCB} = 1]$
+
+Not easy because hiring is observe exclusively for human decisions. Don't observe independent hiring decisions for the different algorithms. Authors try to tackle this issue.  
+
+---
+
+# Quality of Interviewed Applicants
+
+.pull-left[
+
+```{r, echo=FALSE, out.width="100%"}
+  knitr::include_graphics("figs/HiringAsExplorationFig2.png")
+```
+]
+
+.pull-right[
+
+First approach uses sample of applicants who were interviewed. Hiring outcomes observed for these applicants. Can compare applicant quality of different algorithms using this sample. 
+
+Figure depicts relationship between (OOS) hiring outcomes and algorithm scores. Figure shows positive relationships between scores and hiring for algorithms but not for human decisions. 
+
+]
+
+---
+
+```{r, echo=FALSE, out.width="60%"}
+  knitr::include_graphics("figs/HiringAsExplorationTab2.png")
+```
+
+---
+
+# Conclusion
+
+Paper investigates effects of algorithms that give more priority to exploration on hiring potential and diversity. 
+
+Exploration oriented algorithms improve hiring potential and increase representation of Blacks and Hispanics. Suggests that human recruiters may be operating inside the efficient frontier. 
+
+---

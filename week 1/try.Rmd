@@ -14,13 +14,13 @@ This is an R Markdown document of the original code shown in the lecture. I trie
 
 First, loading the data and viewing it.
 ```{r dataset}
-CEO_Diary <- read.csv ("D:/Documentos/Documents/Master/Data Science/data/survey_response_data.csv")
+CEO_Diary <- read.csv ("C:/Users/micap/Documents/GitHub/data-science/data/survey_response_data.csv")
 View(CEO_Diary)
 ```
 
 CEO_Diary is called a dataframe. To subset the data you can use
 ```{r subset_data}
-CEO_Diary[1:15,c(1:5,37, 39, 40)]
+CEO_Diary[1:15,c(1:5,37, 39, 40)] #c(1:5, 37, 39, 40): This specifies the columns to be selected 
 ```
 
 To fin out the "class" of a variable you use apply.
@@ -38,6 +38,8 @@ or summary statistics:
 in this case we are giving summary statistics of the columns 1-5
 ```{r}
 summary(CEO_Diary[1:5])
+summary(CEO_Diary[1:3])
+summary(CEO_Diary[3:4])
 
 ```
 
@@ -59,7 +61,7 @@ prop.table(): Converts the frequency table into proportions (so the bar heights 
 barplot(): Plots a bar chart of the proportions.
 las=2: Rotates the axis labels to be perpendicular to the axis, making them easier to read when there are many or long labels.
 ```{r}
-barplot(prop.table(table(CEO_Diary$type)), las=2)
+barplot(prop.table(table(CEO_Diary$type)), las=2) #las=2 rotates the axis of labels
 
 ```
 
