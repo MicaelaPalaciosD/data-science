@@ -12,4 +12,4 @@ R and Content:
 - in my case it was less elastic with price increase, could be because I increased price a lot (by 65).
 - increasing price by less (0.5) increased elasticity which was expected
 - decreasing the price a bit (0.5) decreased elasticity. This parts I added as branches and also added screenshots.
- 
+ - we can see that in the baseline. 
