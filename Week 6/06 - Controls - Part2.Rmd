@@ -1,7 +1,7 @@
 ---
 title: "FEM11213 - Data Science and HR Analytics"
 subtitle: "06 - Controls"
-author: "Sacha Kapoor"
+author: "Sacha Kapoor changed by micaela"
 date: "03 November 2023 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
@@ -138,12 +138,13 @@ orthoLTE <- function(x, d, y, dreg, yreg, nfold=2)
 	ytil <- dtil <- rep(NA, nobs)
 	# run OOS orthogonalizations
 	cat("fold: ")
+	# this is the important part
 	for(b in 1:length(I)){
 		dfit <- dreg(x[-I[[b]],], d[-I[[b]]])
 		yfit <- yreg(x[-I[[b]],], y[-I[[b]]])
-		dhat <- predict(dfit, x[I[[b]],], type="response")
-		yhat <- predict(yfit, x[I[[b]],], type="response")
-		dtil[I[[b]]] <- drop(d[I[[b]]] - dhat)
+		dhat <- predict(dfit, x[I[[b]],], type="response") #we use d(first part)
+		yhat <- predict(yfit, x[I[[b]],], type="response") #we see in y 
+		dtil[I[[b]]] <- drop(d[I[[b]]] - dhat) #objects we will use in estimation to residualize. Residualize by OOS constructions
 		ytil[I[[b]]] <- drop(y[I[[b]]] - yhat)
 		cat(b," ")
 	}
@@ -166,7 +167,7 @@ head(resids$dtil)
 head(resids$ytil)
 2*pnorm(-abs(resids$gam)/resids$se) #p-value supports no effect of abortion access on crime
 ```
-
+we construct p value we dont adjust for estimates.
 ---
 
 # Heterogeneous Treatment Effects (HTE)
@@ -195,7 +196,7 @@ y = \beta_0 + \beta_1(\mathbf{x}) d + \mathbf{x}'\boldsymbol\beta + e\qquad
 \end{align*}
 
 where $\beta_1(\mathbf{x}) = \beta_1 + \mathbf{x}'\gamma$ is the treatment effect for all people with a given $\mathbf{x}$.  
-
+now we look how effect differs depending on observables
 ---
 
 # Heterogeneous Treatment Effects (HTE)
@@ -270,6 +271,7 @@ names(P)[6] <- "numhh"
 head(P,n=3)
 dim(P)
 table(P$selected)
+# randomization was at hh level but not individual that was the design flaw
 ```
 
 ---
@@ -277,14 +279,14 @@ table(P$selected)
 Average effects can be computed as follows 
 
 ```{r}
-ybar <- tapply(P$doc_any_12m, P$selected, mean)
+ybar <- tapply(P$doc_any_12m, P$selected, mean) #selected for insurance
 ( ATE = ybar['1'] - ybar['0'] )
 
 nsel <- table(P[,c("selected")])
 yvar <- tapply(P$doc_any_12m, P$selected, var)
 ( seATE = sqrt(sum(yvar/nsel)) )
 
-ATE + c(-2,2)*seATE
+ATE + c(-2,2)*seATE #average treatment effect + critical values for CI -2 and 2 scales SEto capture variability. seATE --> SE of the ATE, uncertainty or variability in the estimate of the ATE --> tells us the CI
 ```
 
 --- 
@@ -292,7 +294,7 @@ ATE + c(-2,2)*seATE
 Control for number of household members because randomization was imperfect. Randomized across households. If your household was chosen, then everyone in your household became eligible. 
 
 ```{r}
-lin <- glm(doc_any_12m ~ selected + numhh, data=P);
+lin <- glm(doc_any_12m ~ selected + numhh, data=P); #regression of y on selected and numhh
 round( summary(lin)$coef["selected",],4) # 6-7% increase in prob
 ```
 
@@ -314,7 +316,7 @@ But we have a missing data problem. Let's deal with that first.
     + introduce a new category called "NA" 
     ```{r}
     levels(X$edu_12m)
-    source("naref.R")
+    source("C:/Users/micap/Documents/GitHub/data-science/data/naref.R")
     levels(naref(X$edu_12m))
     X <- naref(X) #makes NA the base group
     ```
@@ -325,7 +327,7 @@ But we have a missing data problem. Let's deal with that first.
 
 ```{r}
 xnum <- X[,sapply(X,class)%in%c("numeric","integer")]
-xnum[66:70,]
+xnum[66:70,] #from 66 to 70
 colSums(is.na(xnum))
 # flag missing
 xnumna <- apply(is.na(xnum), 2, as.numeric)
@@ -368,22 +370,23 @@ dim(xhte)
 Now we are ready to deal with heterogeneous treatment effects. 
 
 ---
-
+Creating heterogeneous effects. 
 ```{r}
 dxhte <- P$selected*xhte
 colnames(dxhte) <- paste("d",colnames(xhte), sep=".")
-htedesign <- cbind(xhte,d=P$selected,dxhte)
+htedesign <- cbind(xhte,d=P$selected,dxhte) #Interactions of $d$ with $xs$. That is design matrix 
 # include the numhh controls and baseline treatment without penalty 
-htefit <- gamlr(x=htedesign, y=P$doc_any_12m, free=c("numhh2","numhh3+","d"))
+htefit <- gamlr(x=htedesign, y=P$doc_any_12m, free=c("numhh2","numhh3+","d")) #we fit design of wheter they visited dr in the past 12 months. free means not penalized. Estimation will determine those, we will not drop them
 gam <- coef(htefit)[-(1:(ncol(xhte)+1)), ]
-round(sort(gam)[1:6],4)
-round(sort(gam, decreasing=TRUE)[1:6],4)
+round(sort(gam)[1:6],4) #you simplify taking away interactions. 
+round(sort(gam, decreasing=TRUE)[1:6],4) 
 ```
 
 Treatment effect is now a 9% increase in PCP visit rates. 
   * But significant heterogeneity around this value. 
   * e.g. treatment effect is 13% for people of Pacific Islander descent.
-
+You get 9% as coefficient of d. 
+Pacific islanders background have 13% increase in prob of visiting dr in last 12 months.
 ---
 
 # Consumer demand estimation and heterogeneous treatment effects 
@@ -395,6 +398,7 @@ Price elasticity of demand is a key parameter for many businesses. Measures the 
 It is key for many businesses because it determines the gross margin: 
 
   $p = \frac{\gamma}{1 + \gamma} c$
+  slope of relationship cost price (elasticity) you can estimate what p should be and do experiments to se how p change would work.
 
 It is important for them to know how it depends on consumer characteristics like age (for price discrimination e.g.). To estimate heterogeneous price elasticities, can specify: 
 
@@ -409,10 +413,10 @@ where $i$ is product, $t$ is the week, $\mathbb{E}[\varepsilon_{it}|p_{it}, \mat
 ```{r}
 load("../Data/dominicks-beer.rda")
 head(wber)
-wber = wber[sample(nrow(wber), 100000), ]
+wber = wber[sample(nrow(wber), 100000), ] #sub sample
 head(upc)
 dim(upc)
-wber$lp <- log(12*wber$PRICE/upc[wber$UPC,"OZ"]) #ln price per 12 ounces
+wber$lp <- log(12*(wber$PRICE+65)/upc[wber$UPC,"OZ"]) #ln price per 12 ounces, normalize p to be per 12 ounces I changed price to increase it and see how it affects elasticity
 ```
 
 ---
@@ -421,15 +425,16 @@ wber$lp <- log(12*wber$PRICE/upc[wber$UPC,"OZ"]) #ln price per 12 ounces
 coef( margfit <- lm(log(MOVE) ~ lp, data=wber[,]) )
 #10% increase in price decreases  quantity sold by 6%
 #ATE
+#gives us elasticity. average effect across all prod.
 ```
 
 ---
 
 ```{r}
-wber$s <- factor(wber$STORE); wber$u <- factor(wber$UPC); wber$w <- factor(wber$WEEK)
+wber$s <- factor(wber$STORE); wber$u <- factor(wber$UPC); wber$w <- factor(wber$WEEK)#unique store, upc and unique week. constructing 3 subsets
 xs <- sparse.model.matrix( ~ s-1, data=wber); xu <- sparse.model.matrix( ~ u-1, data=wber); xw <- sparse.model.matrix( ~ w-1, data=wber)
 # parse the item description text as a bag o' words
-library(tm)
+library(tm) #lets you extract words
 descr <- Corpus(VectorSource(as.character(upc$DESCRIP)))
 descr <- DocumentTermMatrix(descr)
 descr <- sparseMatrix(i=descr$i,j=descr$j,x=as.numeric(descr$v>0), # convert from stm to Matrix format
@@ -447,14 +452,16 @@ dim(controls)
 ```{r}
 # naive lasso
 naivefit <- gamlr(x=cbind(lp=wber$lp,controls)[,], y=log(wber$MOVE), free=1, standardize=FALSE)
-print( coef(naivefit)[1:2,] )
+print( coef(naivefit)[1:2,] ) # larger elasticity with lasso
 # orthogonal ML 
 resids <- orthoLTE( x=controls, d=wber$lp, y=log(wber$MOVE), dreg=dreg, yreg=yreg, nfold=5)
 ```
+I increase prices than what is in the original slides, the lp coefficient is much smaller indicating less elasticity. After price increase, consumer sensitivity to price reduces. It could also be because I increased prices by a lot (added 65)
 ---
 
 
 ```{r}
+#heterogenuity now:
 # interact items and text with price
 #lpxu <- xu*wber$lp
 #colnames(lpxu) <- paste("lp",colnames(lpxu),sep="")
@@ -474,6 +481,7 @@ gamfull <- drop(eachbeer%*%coef(fullhte)[2:(ncol(d)+1),])
 
 
 ---
+you get linear interactions between lp and descriptor. 
 ```{r}
 coef(fullhte)
 ```
@@ -482,7 +490,7 @@ coef(fullhte)
 
 ```{r}
 
-hist(gamfull, main="", xlab="elasticity", col="darkgrey", freq=FALSE)
+hist(gamfull, main="", xlab="elasticity", col="pink", freq=FALSE)
 ```
 
 ---

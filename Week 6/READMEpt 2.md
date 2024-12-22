@@ -1,16 +1,11 @@
-## Read Me for Week 6. Controls pt 1
+## Read Me for Week 6. Controls pt 2
 Learning R:
-- learned how to write with italic
--learned to pull left and right in slide to make notes or make things visible.
-
+- Handling NA in R
+- computational time can really be annoying because it limits or burdens experimentation.
 
 R and Content: 
--  I am leaving some clarifications on the slides. This make it easier for me to understand the topic
-- R2 indicates how much independent signal you have for estimating 
+-doing an orthogonal ml for LTE. in sample throwing we throw data no we use all the data.
+- HTE --> example with OHIE (healthcare insurance)
+- free means not penalized (in R)
+- Increased price (adding directly to it ) to see the effect on elasticity. I learned how to check for the elasticity change. in my case it was less elastic with price increase, could be because I increased price a lot.
 
-
-Going through the content slowly to solve some mind fogs: 
-- Partial effect in the regression because we fixed one brand, we are not looking at general effect.
-- More controls than data points is not good
-- baseline regression assumes linear increase, we can adapt it to quadratic term
-- we dont want SE of b hat but of y hat. In applied econometrics we care about good parameter (b) but here we care about good predictions (y)
