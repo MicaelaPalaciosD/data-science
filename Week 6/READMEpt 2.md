@@ -4,7 +4,7 @@ Learning R:
 - computational time can really be annoying because it limits or burdens experimentation.
 
 R and Content: 
--doing an orthogonal ml for LTE. in sample throwing we throw data no we use all the data.
+-doing an orthogonal ml for LTE. in sample throwing we throw data now we use all the data.
 - HTE --> example with OHIE (healthcare insurance)
 - free means not penalized (in R)
 - Increased price (adding directly to it ) to see the effect on elasticity. I learned how to check for the elasticity change. in my case it was less elastic with price increase, could be because I increased price a lot.
