@@ -416,7 +416,7 @@ head(wber)
 wber = wber[sample(nrow(wber), 100000), ] #sub sample
 head(upc)
 dim(upc)
-wber$lp <- log(12*(wber$PRICE+65)/upc[wber$UPC,"OZ"]) #ln price per 12 ounces, normalize p to be per 12 ounces I changed price to increase it and see how it affects elasticity
+wber$lp <- log(12*(wber$PRICE+0.5)/upc[wber$UPC,"OZ"]) #ln price per 12 ounces, normalize p to be per 12 ounces I changed price to increase it and see how it affects elasticity
 ```
 
 ---
@@ -426,6 +426,7 @@ coef( margfit <- lm(log(MOVE) ~ lp, data=wber[,]) )
 #10% increase in price decreases  quantity sold by 6%
 #ATE
 #gives us elasticity. average effect across all prod.
+#increasing the price (now by not such a big number (before by 65 now by 0.5)) makes it more price sensitive than decreasing the price (another practice I did with -0.5 which changed the lp to -0.596. 
 ```
 
 ---
