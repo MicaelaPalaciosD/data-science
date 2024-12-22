@@ -1,0 +1,43 @@
+# Multi-Armed Bandit Problem - little step to understand lecture better
+
+Note: this was made with a site I found very useful to explain this problemthe first two subtitles are from there. I am citing it at the end. Then I will talk more about the paper and relate it to other content from other coutses.
+
+## Exploitation vs Exploration
+
+Dilemma we can see daily. Use/buy/visit what we already know works for us or explore for something we could potentially like more. This problem comes from incomplete information. We need to gather enough information to be able to take the best decisions overall while keeping risks under control.
+
+-   Exploitation: we take advantage of what we know
+
+-   Exploration: we take risk to collect more information of unknown options
+
+![](https://lilianweng.github.io/posts/2018-01-23-multi-armed-bandit/exploration_vs_exploitation.png)
+
+## Multi-Armed Bandit
+
+![](https://lilianweng.github.io/posts/2018-01-23-multi-armed-bandit/bern_bandit.png)
+
+## Hiring as exploration
+
+This paper by Li et. al. (2020) views hiring as a contextual bandit problem. To find the best workers firms need to balance exploitation and exploration. Exploitation being the selection from groups with proven track records and exploration as selecting from under-represented groups to learn about quality.
+
+This paper builds an algorithm that values exploration. \
+\
+This is a very interesting approach because as they mention, modern algorithms, based on supervised learning approaches, are designed for exploration.
+
+## Relating this paper and content to other courses - what I thought while learning
+
+In Anne Boring's class *Inequalities and discrimination in the labor market* we discussed a lot about how inequalities risen overtime and ended up hurting some groups while benefiting others. The discussion about algorithms hiring and human resources relying less on actual people and more on machines is also a relevant topic nowadays. \
+\
+A concept I found really interesting and wanted to relate to this course was of systemic discrimination and statistical discrimination. As the authors of *Hiring as an exploration* mention, the way in which algorithms analyze historical examples and give predictions can give better results than human recruiters. However it is important to consider how this could potentially affect discrimination and people's opportunities. Recognizing how the information is made and suggesting considering the benefit of exploring sounds so interesting. But, if I think about gender inequality in the labor market, if we apply the algorithms built on historical data about quality of groups, how can we avoid it increasing systemic discrimination? How can we avoid the algorithm from constraining the opportunities of disadvantaged groups not because it does not have information about them. Instead because it uses information that was built already from unequal opportunities? I imagine this is where the policy considerations we discussed in Boring's course come in play. An example I think about is women's careers being hurt because of taking care/responsibility of children more often than men. This information about the group can be in an algorithm because it affects productivity and quality indirectly. Maybe we can add considerations to not further those inequalities? But, for this to work, there needs to be policy from the government or firms that actually force this change.
+
+There are so many ethical considerations, policy considerations and economical considerations that when reading this paper come to mind.
+
+It is a very interesting topic to dive into, as there are many news (and clickbait) that portray algorithm recruiting as unethical and full of mistakes but it can potentially consider many of those concerns.
+
+## Bibliography
+
+Li, D., Raymond, L., & Bergman, P. (2020). *Hiring as Exploration*. <https://doi.org/10.3386/w27736>
+
+‌Weng, L. (2018, January 23). *The Multi-Armed Bandit Problem and Its Solutions*. Github.io; Lil’Log. <https://lilianweng.github.io/posts/2018-01-23-multi-armed-bandit/>
+
+‌
