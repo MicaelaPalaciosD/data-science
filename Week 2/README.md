@@ -9,6 +9,7 @@
 - learned how to make histogram with stored values (here it was mean)
 - values are not the same as in the slides because of how bootstrap works
 - learned how to use the BH algorithm using R, the steps can be coded
-- BH algorithm plot. making q smaller males the slope flatter which shows more strict restrictions. Also increasing the nr of hypothesis could have this effect. With too many hypothesis, Algorithm doesnt seem useful. 
+- BH algorithm plot. making q smaller makes the slope flatter which shows more strict restrictions. I changed it to see how the graph changes
+- Also increasing the nr of hypothesis could have this effect. With too many hypothesis, Algorithm doesnt seem useful. 
 
 
