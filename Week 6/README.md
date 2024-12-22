@@ -1,7 +1,7 @@
 ## Read Me for Week 6. Controls pt 1
 Learning R:
 - learned how to write with italic
--learned to pull left and right in slide to make notes or make things visible.
+- learned to pull left and right in slide to make notes or make things visible.
 
 
 R and Content: 
